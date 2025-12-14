@@ -38,12 +38,17 @@ def is_valid_username(username):
     """检查用户名是否为纯英文（包含字母和数字）"""
     return bool(re.match(r'^[a-zA-Z0-9]+$', username))
 
-def save_valid_uids(uids):
-    """保存符合条件的UID到本地文件"""
+def save_valid_uids(uid_data):
+    """保存符合条件的UID和昵称到本地文件"""
     with open("valid_uids.txt", "a", encoding="utf-8") as f:
-        for uid in uids:
-            f.write(f"{uid}\n")
-    print(f"已保存 {len(uids)} 个符合条件的UID")
+        for data in uid_data:
+            if isinstance(data, dict):
+                # 新格式：包含UID和昵称
+                f.write(f"{data['uid']}---{data['nickname']}\n")
+            else:
+                # 旧格式：只有UID
+                f.write(f"{data}\n")
+    print(f"已保存 {len(uid_data)} 个符合条件的UID")
 
 def extract_user_info(driver):
     """从页面中提取用户信息"""
@@ -199,11 +204,12 @@ def scan_accounts():
                         # 检查条件：等级为0，用户名纯英文
                         if level == 0 and is_valid_username(username):
                             print(f"发现符合条件的账号: UID={uid}, 昵称={username}, 等级={level}")
-                            valid_uids.append(uid)
+                            # 保存UID和昵称
+                            valid_uids.append({"uid": uid, "nickname": username})
                             save_count += 1
                             
-                            # 每10个保存一次
-                            if save_count % 10 == 0:
+                            # 每1个保存一次
+                            if save_count % 1 == 0:
                                 save_valid_uids(valid_uids)
                                 valid_uids.clear()
                                 print(f"已保存 {save_count} 个符合条件的UID")
